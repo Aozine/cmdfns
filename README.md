@@ -23,7 +23,8 @@ Then define your program entrypoint (e.g. `main.py`) as follows:
 import cmdfns
 import os
 
-cmdfns.main(search_path=__file__)
+if __name__ == "__main__":
+    cmdfns.main(search_path=__file__)
 ```
 
 You can then call the functions from the command-line as follows:
@@ -43,8 +44,9 @@ Alternatively, you can pass in a custom path for it to search, e.g.:
 import cmdfns
 import os
 
-# Only search the "commands" subdirectory:
-cmdfns.main(search_path=os.path.join(os.path.dirname(__file__), "commands"))
+if __name__ == "__main__":
+    # Only search the "commands" subdirectory:
+    cmdfns.main(search_path=os.path.join(os.path.dirname(__file__), "commands"))
 ```
 
 If the named command is not found, or the special `help` command is used, then
@@ -113,5 +115,6 @@ async def say_hello_after_delay():
 import asyncio
 import cmdfns
 
-asyncio.run(cmdfns.async_main())
+if __name__ == "__main__":
+    asyncio.run(cmdfns.async_main())
 ```

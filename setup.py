@@ -9,6 +9,7 @@ setup(
   author = 'Marc Hull',
   author_email = 'aozine@gmail.com',
   url = 'https://github.com/aozine/cmdfns',
+  download_url = 'https://github.com/Aozine/cmdfns/archive/refs/tags/v0.1.0.tar.gz',
   keywords = ['command-line'],
   install_requires=[],
   classifiers=[

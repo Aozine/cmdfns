@@ -56,10 +56,10 @@ class CommandExecutor:
         if argv is None:
             argv = sys.argv
         if len(argv) < 2:
-            self._print_usage()
+            self._print_usage(True)
             return
         self.execute_command_from_args(argv[1], argv[2:])
-        
+
     def execute_command_from_args(self, command_name: str,
                                   args: list[str]) -> Any:
         """Execute a command given a command name and list of string
@@ -83,18 +83,23 @@ class CommandExecutor:
         Any
             The result of the command, if any.
         """
-        if command_name == "help":
-            self._print_help(args)
-            return
-        command: Optional[Command] = self._store.get_command(command_name)
-        if not command:
-            self._command_not_found(command_name)
-            return
-        positional_args, keyword_args = self._parse_args(args)
-        try:
-            return command.execute(positional_args, keyword_args)
-        except InvalidArgument as e:
-            print(str(e))
+        return self._execute_command_from_args(command_name, args, False)
+
+    def execute_command_from_stdin(self):
+        """Reads commands from stdin and executes them.
+
+        Returns once the "quit" command has been executed.
+        """
+        while True:
+            argv: list[str] = shlex.split(input("> "))
+            command_name = argv[0]
+            args = argv[1:]
+            if command_name == "quit":
+                return
+            elif command_name == "help":
+                self._print_help(args, True)
+            else:
+                self.execute_command_from_args(command_name, args)
 
     async def execute_command_from_argv_async(self,
                                               argv: Optional[list[str]] = None
@@ -121,7 +126,7 @@ class CommandExecutor:
         if argv is None:
             argv = sys.argv
         if len(argv) < 2:
-            self._print_usage()
+            self._print_usage(False)
             return
         return await self.execute_command_from_args_async(argv[1], argv[2:])
 
@@ -148,20 +153,10 @@ class CommandExecutor:
         Any
             The result of the command, if any.
         """
-        if command_name == "help":
-            self._print_help(args)
-            return
-        command: Optional[Command] = self._store.get_command(command_name)
-        if not command:
-            self._command_not_found(command_name)
-            return
-        positional_args, keyword_args = self._parse_args(args)
-        try:
-            return await command.execute_async(positional_args, keyword_args)
-        except InvalidArgument as e:
-            print(str(e))
+        return await self._execute_command_from_args_async(
+            command_name, args, False)
 
-    async def execute_command_from_stdin(self):
+    async def execute_command_from_stdin_async(self):
         """Reads commands from stdin and executes them.
 
         If the command function is an async function then it is awaited.
@@ -171,9 +166,46 @@ class CommandExecutor:
         while True:
             argv: list[str] = shlex.split(input("> "))
             command_name = argv[0]
+            args = argv[1:]
             if command_name == "quit":
                 return
-            await self.execute_command_from_args_async(command_name, argv[1:])
+            elif command_name == "help":
+                self._print_help(args, True)
+            else:
+                await self._execute_command_from_args_async(
+                    command_name, args, True)
+
+    def _execute_command_from_args(self, command_name: str,
+                                   args: list[str],
+                                   interactive: bool) -> Any:
+        if command_name == "help":
+            self._print_help(args, interactive)
+            return
+        command: Optional[Command] = self._store.get_command(command_name)
+        if not command:
+            self._command_not_found(command_name, interactive)
+            return
+        positional_args, keyword_args = self._parse_args(args)
+        try:
+            return command.execute(positional_args, keyword_args)
+        except InvalidArgument as e:
+            print(str(e))
+
+    async def _execute_command_from_args_async(self, command_name: str,
+                                               args: list[str],
+                                               interactive: bool) -> Any:
+        if command_name == "help":
+            self._print_help(args, interactive)
+            return
+        command: Optional[Command] = self._store.get_command(command_name)
+        if not command:
+            self._command_not_found(command_name, interactive)
+            return
+        positional_args, keyword_args = self._parse_args(args)
+        try:
+            return await command.execute_async(positional_args, keyword_args)
+        except InvalidArgument as e:
+            print(str(e))
 
     def _parse_args(self, args: list[str]) -> Tuple[list[str], dict[str, str]]:
         positional_args: list[str] = []
@@ -185,34 +217,43 @@ class CommandExecutor:
             else:
                 positional_args.append(arg)
         return positional_args, keyword_args
-    
-    def _command_not_found(self, command_name: str) -> None:
+
+    def _command_not_found(self, command_name: str, interactive: bool) -> None:
         print(f"Command '{command_name}' not found")
         print()
-        self._print_usage()
+        self._print_usage(interactive)
 
-    def _print_help(self, args: list[str]) -> None:
+    def _print_help(self, args: list[str], interactive: bool) -> None:
         if args:
             command_name = args[0]
             command: Optional[Command] = self._store.get_command(command_name)
             if not command:
-                self._command_not_found(command_name)
+                self._command_not_found(command_name, interactive)
                 return
-            self._print_command_help(command)
+            self._print_command_help(command, interactive)
             return
-        self._print_usage()
+        self._print_usage(interactive)
 
-    def _print_command_help(self, command: Command) -> None:
-        print(f"Usage: {self._exe_name} {command.name} {command.args_string()}")
+    def _print_command_help(self, command: Command, interactive: bool) -> None:
+        print(f"Usage: {self._exe_name} {command.name} " +
+              f"{command.args_string()}")
         if command.function.__doc__:
             print()
             print(command.function.__doc__)
 
-    def _print_usage(self) -> None:
-        print(f"Usage: {self._exe_name} COMMAND [ARGS]")
+    def _print_usage(self, interactive: bool) -> None:
+        if interactive:
+            print("Usage: > COMMAND [ARGS]")
+        else:
+            print(f"Usage: {self._exe_name} COMMAND [ARGS]")
         print()
         print("Where COMMAND is one of:")
         for command in self._store.get_commands():
             print(f"  {command.name}")
         print()
-        print(f"Use '{self._exe_name} help COMMAND' for command-specific help")
+        if interactive:
+            print("Use 'quit' to quit or 'help COMMAND' for " +
+                  "command-specific help")
+        else:
+            print(f"Use '{self._exe_name} help COMMAND' for " +
+                  "command-specific help")

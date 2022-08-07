@@ -9,7 +9,7 @@ setup(
   name="cmdfns",
   packages=["cmdfns"],
   package_data={"cmdfns": ["py.typed"]},
-  version="0.3.0",
+  version="0.5.0",
   license="MIT",
   description="Make Python functions callable from the command-line",
   long_description=long_description,
@@ -19,7 +19,9 @@ setup(
   url="https://github.com/aozine/cmdfns",
   keywords=["command-line"],
   python_requires=">=3.7",
-  install_requires=[],
+  install_requires=[
+    "aioconsole==0.5.0"
+  ],
   classifiers=[
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",

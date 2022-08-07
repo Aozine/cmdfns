@@ -1,7 +1,13 @@
 cmdfns: make Python functions callable from the command-line
 ============================================================
 
-`cmdfns` allows you to make Python functions callable from the command-line.
+`cmdfns` searches your codebase for functions decorated with `cmdfns.command`
+and makes them callable from the command-line. For a more general-purpose
+command-line library check out `clize` or `argparse`.
+
+Basic usage
+-----------
+
 First, decorate any functions that you want to make callable with 
 `cmdfns.command`, e.g.:
 
@@ -49,6 +55,18 @@ if __name__ == "__main__":
     cmdfns.main(search_path=os.path.join(os.path.dirname(__file__), "commands"))
 ```
 
+You can also pass a dictionary of command functions directly to
+`cmdfns.main()` as follows:
+
+```
+import cmdfns
+from hello import say_hello, say_goodbye
+
+if __name__ == "__main__":
+    # Pass functions directory with no searching:
+    cmdfns.main(functions={"say_hello": say_hello, "say_goodbye": say_goodbye})
+```
+
 If the named command is not found, or the special `help` command is used, then
 usage information is printed to stdout:
 
@@ -62,6 +80,9 @@ Where COMMAND is one of:
 
 Use 'main.py help COMMAND' for command-specific help
 ```
+
+Argument parsing
+----------------
 
 Arguments can be passed to command functions either as positional arguments or
 as keyword arguments of the form `name=value`, e.g.:
@@ -99,16 +120,53 @@ $ python main.py 4 3.2 True
 Argument types: <class 'int'> <class 'float'> <class 'bool'>
 ```
 
+Interactive mode
+----------------
+
+`cmdfns` can also be run in interactive mode, whereby it will continually read
+and execute commands from stdin. To do this, use `cmdfns.interactive_main()`
+as follows:
+
+```
+import cmdfns
+
+if __name__ == "__main__":
+    cmdfns.interactive_main()
+```
+
+```
+$ python main.py
+> say_hello
+Hello, world
+> say_goodbye
+Goodbye, world
+> help
+Usage: > COMMAND [ARGS]
+
+Where COMMAND is one of:
+  say_goodbye
+  say_hello
+
+Use 'quit' to quit or 'help COMMAND' for command-specific help
+> quit
+$
+```
+
+Asynchronous functions
+----------------------
+
 To call asynchronous functions as command functions, use `cmdfns.async_main()`
-instead of `cmdfns.main()` as follows:
+or `cmdfns.async_interactive_main()` instead of `cmdfns.main()` as follows:
 
 ```
 import asyncio
 from cmdfns import command
 
 @command
-async def say_hello_after_delay():
+async def say_hello_and_goodbye():
     print("Hello, world")
+    await asyncio.sleep(1000)
+    print("Goodbye, world")
 ```
 
 ```
@@ -117,4 +175,10 @@ import cmdfns
 
 if __name__ == "__main__":
     asyncio.run(cmdfns.async_main())
+```
+
+```
+$ python main.py say_hello_and_goodbye
+Hello, world
+Goodbye, world
 ```

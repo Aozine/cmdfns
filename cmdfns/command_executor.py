@@ -1,4 +1,5 @@
 
+import aioconsole
 import re
 import shlex
 import sys
@@ -164,7 +165,8 @@ class CommandExecutor:
         Returns once the "quit" command has been executed.
         """
         while True:
-            argv: list[str] = shlex.split(input("> "))
+            line: str = await aioconsole.ainput("> ")
+            argv: list[str] = shlex.split(line)
             command_name = argv[0]
             args = argv[1:]
             if command_name == "quit":

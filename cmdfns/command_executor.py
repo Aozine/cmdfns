@@ -3,6 +3,7 @@ import aioconsole
 import re
 import shlex
 import sys
+import traceback
 from typing import Any, Optional, Tuple
 
 from cmdfns.command_cls import Command
@@ -91,8 +92,9 @@ class CommandExecutor:
 
         Returns once the "quit" command has been executed.
         """
+        self._print_usage(True)
         while True:
-            argv: list[str] = shlex.split(input("> "))
+            argv: list[str] = shlex.split(input())
             command_name = argv[0]
             args = argv[1:]
             if command_name == "quit":
@@ -100,7 +102,10 @@ class CommandExecutor:
             elif command_name == "help":
                 self._print_help(args, True)
             else:
-                self.execute_command_from_args(command_name, args)
+                try:
+                    self.execute_command_from_args(command_name, args)
+                except Exception:
+                    traceback.print_exc()
 
     async def execute_command_from_argv_async(self,
                                               argv: Optional[list[str]] = None
@@ -164,8 +169,9 @@ class CommandExecutor:
 
         Returns once the "quit" command has been executed.
         """
+        self._print_usage(True)
         while True:
-            line: str = await aioconsole.ainput("> ")
+            line: str = await aioconsole.ainput()
             argv: list[str] = shlex.split(line)
             command_name = argv[0]
             args = argv[1:]
@@ -174,8 +180,11 @@ class CommandExecutor:
             elif command_name == "help":
                 self._print_help(args, True)
             else:
-                await self._execute_command_from_args_async(
-                    command_name, args, True)
+                try:
+                    await self._execute_command_from_args_async(
+                        command_name, args, True)
+                except Exception:
+                    traceback.print_exc()
 
     def _execute_command_from_args(self, command_name: str,
                                    args: list[str],
@@ -245,13 +254,13 @@ class CommandExecutor:
 
     def _print_usage(self, interactive: bool) -> None:
         if interactive:
-            print("Usage: > COMMAND [ARGS]")
+            print("Available commands:")
         else:
             print(f"Usage: {self._exe_name} COMMAND [ARGS]")
-        print()
-        print("Where COMMAND is one of:")
+            print()
+            print("Where COMMAND is one of:")
         for command in self._store.get_commands():
-            print(f"  {command.name}")
+            print(f"  {command.name} {command.args_string()}")
         print()
         if interactive:
             print("Use 'quit' to quit or 'help COMMAND' for " +

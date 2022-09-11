@@ -9,7 +9,7 @@ setup(
   name="cmdfns",
   packages=["cmdfns"],
   package_data={"cmdfns": ["py.typed"]},
-  version="0.6.0",
+  version="0.7.0",
   license="MIT",
   description="Make Python functions callable from the command-line",
   long_description=long_description,

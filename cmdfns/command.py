@@ -1,8 +1,8 @@
 
-from typing import Any, Callable
+from typing import Any, Callable, Union
 
 
-def command(fn_or_name: str | Callable[..., Any]) -> Callable[..., Any]:
+def command(fn_or_name: Union[str, Callable[..., Any]]) -> Callable[..., Any]:
     """Decorator for marking a function as a command that can be called from
     the command-line.
 
@@ -18,7 +18,7 @@ def command(fn_or_name: str | Callable[..., Any]) -> Callable[..., Any]:
 
     Parameters
     ----------
-    fn_or_name : str | Callable[..., Any]
+    fn_or_name : Union[str, Callable[..., Any]]
         Optional custom command name, if not provided then the function
         name is used.
 

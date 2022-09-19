@@ -64,7 +64,8 @@ def main(search_path: Optional[str] = None,
 
 def interactive_main(search_path: Optional[str] = None,
                      functions: Optional[dict[str, Callable[..., Any]]] = None,
-                     index_path: Optional[str] = None) -> None:
+                     index_path: Optional[str] = None,
+                     exe_name: Optional[str] = None) -> None:
     """Interactively executes commands read from sys.stdin.
 
     Repeatedly reads commands from sys.stdin and executes them, with any
@@ -92,6 +93,9 @@ def interactive_main(search_path: Optional[str] = None,
     index_path : Optional[str], optional
         The path to write an index file to for speeding up subsequent command
         look-ups.
+    exe_name : Optional[str], optional
+        Optional executable name to use in help text (defaults to
+        sys.argv[1]).
     """
     if search_path is not None and functions is not None or \
        search_path is None and functions is None:
@@ -107,12 +111,14 @@ def interactive_main(search_path: Optional[str] = None,
         command_store = DictCommandStore(functions)
     else:
         raise Exception("Not implemented")
-    return CommandExecutor(command_store).execute_command_from_stdin()
+    return CommandExecutor(
+        command_store, exe_name=exe_name).execute_command_from_stdin()
 
 
 async def async_main(search_path: Optional[str] = None,
                      functions: Optional[dict[str, Callable[..., Any]]] = None,
-                     index_path: Optional[str] = None) -> Any:
+                     index_path: Optional[str] = None,
+                     exe_name: Optional[str] = None) -> Any:
     """Searches for command functions under the given search path and executes
     the one named in sys.argv.
 
@@ -147,6 +153,9 @@ async def async_main(search_path: Optional[str] = None,
     index_path : Optional[str], optional
         The path to write an index file to for speeding up subsequent command
         look-ups.
+    exe_name : Optional[str], optional
+        Optional executable name to use in help text (defaults to
+        sys.argv[1]).
 
     Returns
     -------
@@ -168,7 +177,7 @@ async def async_main(search_path: Optional[str] = None,
     else:
         raise Exception("Not implemented")
     return await CommandExecutor(
-        command_store).execute_command_from_argv_async()
+        command_store, exe_name=exe_name).execute_command_from_argv_async()
 
 
 async def async_interactive_main(

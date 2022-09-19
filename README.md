@@ -165,7 +165,7 @@ from cmdfns import command
 @command
 async def say_hello_and_goodbye():
     print("Hello, world")
-    await asyncio.sleep(1000)
+    await asyncio.sleep(1)
     print("Goodbye, world")
 ```
 
@@ -174,7 +174,7 @@ import asyncio
 import cmdfns
 
 if __name__ == "__main__":
-    asyncio.run(cmdfns.async_main())
+    asyncio.run(cmdfns.async_main(search_path=__file__))
 ```
 
 ```
